@@ -43,6 +43,6 @@ app.get('/usuario/:id', function (req, res) {
 
 
 
-app.listen(3000, () => {
+app.listen(port, () => {
     console.log('Escuchando el puerto:', port)
 })
