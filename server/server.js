@@ -1,7 +1,8 @@
 const express = require('express')
-var bodyParser = require('body-parser')
+const bodyParser = require('body-parser')
+const config = require('./config/config')
  
-var app = express()
+const app = express()
  
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }))
@@ -16,14 +17,11 @@ app.post('/usuario/create', function (req, res) {
         res.status(400).json({
             ok: false,
             message: 'El nombre es necesario',
-            
         })
     }else{
         res.json({
         body
-    })
-    }
-    
+    })}
 });
 
 
@@ -44,5 +42,5 @@ app.get('/usuario/:id', function (req, res) {
 
 
 app.listen(3000, () => {
-    console.log('Escuchando el puerto:', 3000)
+    console.log('Escuchando el puerto:', process.env.PORT)
 })
