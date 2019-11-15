@@ -15,9 +15,6 @@ app.use(bodyParser.json())
 // Global routes configuration
 app.use(require('./controllers/index'));
 // use all controllers with this routes
-// app.use(require('./controllers/user.controller'));
-// let url = 'mongodb+srv://admin:<admin>@cluster0-k9gxz.mongodb.net/test';
-// let url2 = 'mongodb://localhost:27017/cafe'
 mongoose.connect(process.env.URLDB,
                 { useNewUrlParser: true , useCreateIndex: true, useUnifiedTopology: true},
                  (err,res) => {
