@@ -32,7 +32,10 @@ let userSchema = new Schema({
         ref: "Role",
         required: [true, 'Debe ingresar un rol']
     },
-    addresses: [],
+    addresses: [{
+        type:Schema.ObjectId,
+        ref: "Address"
+    }],
     status: {
         type: Boolean,
         default: true
@@ -52,3 +55,5 @@ userSchema.methods.toJSON = function() {
 userSchema.plugin( uniqueValidator, {message: '{VALUE} ya existe'});
 
 module.exports = mongoose.model('User', userSchema);
+
+
