@@ -1,36 +1,48 @@
 const express = require('express');
 const app = express();
 const User = require('../models/user')
+const Address = require('../models/address')
 const bcrypt = require('bcrypt');
 const { validatorToken, validatorAdminRole } = require('./../middlewares/authentication')
 const _ = require('underscore');
 
 const headerOptions = ("Access-Control-Allow-Origin", "*", "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept");
-app.post('/user/create', validatorToken, function (req, res) {
+app.post('/user/create', async function (req, res) {
+    console.log(req.body);
     const body = req.body;
     const user = new User({
         name: body.name,
         email: body.email,
         password: bcrypt.hashSync(body.password, 10),
-        role: body.role
+        role: body.role,
     });
-
-    user.save((err, userDB) => {
-        if (err) {
-            return res.status(400).json({
-                ok: false,
-                err
-            })
-        }
+    const list = [];
+    if(body.address){
+        body.address.forEach(function(item){
+            const address = new Address({
+                name: item.name,
+                user: user._id
+            });
+            list.push(address);
+        })
+    }
+    try {
+        
+        const newUser = await user.save();
+        const newAddresses = await Address.insertMany(list);
         res.json({
             ok: true,
-            user: userDB
+            user: newUser
         })
-    })
+    } catch (err) {
+        console.log(err);
+        return res.status(400).json({
+                        ok: false,
+                        err
+                    })
+    }
 });
-
-
 app.put('/user/update/:id', [ validatorToken, validatorAdminRole ],async function (req, res) {
     const id = req.params.id;
     // let body = _.pick(req.body, ['name', 'email', 'role', 'status']);
@@ -50,35 +62,28 @@ app.put('/user/update/:id', [ validatorToken, validatorAdminRole ],async functio
             }
         })
     }
-    // User.findByIdAndUpdate(id, body, { new: true, runvalidatorTokens: true }, (err, userDB) => {
-    //     if (err) {
-    //         return res.status(400).json({
-    //             ok: false,
-    //             message: 'Hubo un error: ' + err,
-    //         })
-    //     }
-
-    //     res.json({
-    //         ok: true,
-    //         user: userDB
-    //     })
-    // })
 });
 
-app.get('/user/getall', [validatorToken, validatorAdminRole ], async function (req, res) {
+app.get('/user/getall', [validatorToken ], async function (req, res) {
     res.header(this.headerOptions);
     const limit = Number(req.query.limit) || 5;
     const skip = Number(req.query.skip) || 0;
     try {
-        const users = await User.find({ status: true }, 'name email role google')
+        const that = this;
+        const users = await User.find({ status: true }, 'name email role google address')
+            .populate({ path:"role",
+                        populate: { path: 'group'}
+                    })
             .skip(skip)
             .limit(limit)
             .exec();
-        const count = await User.countDocuments({ status: true })
-            .exec();
-        res.json({
+            const addresses = await Address.find({user : entity._id})
+                .exec();
+
+        res.json({ 
             ok: true,
             users,
+            address,
             count,
             userGet: req.userToken
         })
@@ -91,43 +96,37 @@ app.get('/user/getall', [validatorToken, validatorAdminRole ], async function (r
             }
         })
     }
-    // User.find({ status: true}, 'name email role google')
-    //     .skip(skip)
-    //     .limit(limit)
-    //     .exec((err, usuarios) => {
-    //         if (err) {
-    //             return res.status(400).json({
-    //                 ok: false,
-    //                 err
-    //             })
-    //         }
-    //         User.countDocuments({ status: true })
-    //             .exec((err,conteo) => {
-    //             if(err) {
-    //                 return res.status(400).json({
-    //                     ok:false,
-    //                     err
-    //                 })
-    //             }
-    //             res.json({
-    //                 ok: true,
-    //                 usuarios,
-    //                 conteo,
-    //                 userGet: req.user
-    //             })
-    //         })
-    //     })
 });
-app.get('/user/:id', validatorToken ,function (req, res) {
+app.get('/user/getbyid/:id', validatorToken ,async function (req, res) {
     let id = req.params.id;
-    res.json({
-        id
-    })
+    console.log(id);
+    try{
+        const user = await User.findById({ _id: id }, 'name email role google address')
+            .populate({ path:"role",
+                        populate: { path: 'group'}
+                    })
+            .skip(skip)
+            .limit(limit)
+            .exec();
+        res.status(400).json({
+            ok: true,
+            user
+        })
+    }catch (err) {
+        res.status(400).json({
+            ok: false,
+            err: {
+                message: 'Hubo un error',
+                err
+            }
+        })
+    }
+    
 });
 app.get('/user/delete/:id', validatorToken,  async function (req, res) {
     console.log('asdasdas');
     let id = req.params.id;
-    let body = { status: false }
+    let body = { statuss: false }
     try {
         User.findByIdAndUpdate(id, body, { new: true })
             .then(user   => {
@@ -163,18 +162,6 @@ app.get('/user/delete/:id', validatorToken,  async function (req, res) {
         }
     })
 }
-    // User.findByIdAndUpdate(id, body,{new: true}, (err, userDB) => {
-    //     if(err){
-    //         return res.status(400).json({
-    //             ok: false,
-    //             err
-    //         })
-    //     }
-    //     res.json({
-    //         ok: true,
-    //         userDB
-    //     })
-    // })
 });
 
 

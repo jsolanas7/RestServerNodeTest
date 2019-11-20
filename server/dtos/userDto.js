@@ -32,7 +32,9 @@ let userSchema = new Schema({
         ref: "Role",
         required: [true, 'Debe ingresar un rol']
     },
-    addresses: [],
+    addresses: [{
+        
+    }],
     status: {
         type: Boolean,
         default: true
@@ -41,6 +43,7 @@ let userSchema = new Schema({
         type: Boolean,
         default: false
     }
+    
 });
 
 userSchema.methods.toJSON = function() {
